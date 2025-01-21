@@ -575,20 +575,75 @@ section
     apply hx2B
 
   -- 2.k
+  -- This example is false
   example (A B C D : Set α) : A ⊆ C ∧ B ⊆ D → (A ×ˢ B) ⊈ (C ×ˢ D) := by
     sorry
 
   -- 2.l
+  -- This example is still false
   example (A B C D : Set α) (hA : A ≠ ∅) (hB : B ≠ ∅) : A ⊆ C ∧ B ⊆ D → (A ×ˢ B) ⊈ (C ×ˢ D) := by
+    intro ⟨hAC, hBD⟩
+    rw [Set.subset_def] at *
+    push_neg at *
+    rw [nonempty_def] at hB
+    rw [nonempty_def] at hA
+    obtain ⟨a, hA⟩ := hA
+    obtain ⟨b, hB⟩ := hB
+    use (a, b)
+    simp
+    constructor
+    · constructor
+      · apply hA
+      apply hB
+    intro haC
+    apply hBD at hB
+    -- no way to prove b ∉ D here
     sorry
 
   -- 2.m
-  example (A B C D : Set α) : (A ×ˢ B) ∪ (C ×ˢ D) = (A ∪ C) ×ˢ (B ∪ D) := by
-    sorry
+  -- Changed to `⊆` since you can have pairs from C ∪ B 
+  -- in (A ∪ C) ×ˢ (B ∪ D) that aren't in the left side
+  example (A B C D : Set α) : (A ×ˢ B) ∪ (C ×ˢ D) ⊆ (A ∪ C) ×ˢ (B ∪ D) := by
+    rw [Set.subset_def]
+    intro ⟨x1, x2⟩ H
+    simp at *
+    obtain ⟨hx1A, hx2B⟩ | ⟨hx1C, hx2D⟩ := H
+    · left
+      left
+      constructor
+      · apply hx1A
+      apply hx2B
+    right
+    right
+    constructor
+    · apply hx1C
+    apply hx2D
 
   -- 2.n
   example (A B C D : Set α) : (A ×ˢ B) ∩ (C ×ˢ D) = (A ∩ C) ×ˢ (B ∩ D) := by
-    sorry
+    ext x
+    obtain ⟨x1, x2⟩ := x
+    constructor
+    · intro H
+      simp at *
+      obtain ⟨⟨hx1A, hx2B⟩, ⟨hx1C, hx2D⟩⟩ := H 
+      constructor
+      · constructor
+        · apply hx1A
+        apply hx1C
+      constructor
+      · apply hx2B
+      apply hx2D
+    intro H
+    simp at *
+    obtain ⟨⟨hx1A, hx1C⟩, ⟨hx2B, hx2D⟩⟩ := H
+    constructor
+    · constructor
+      · apply hx1A
+      apply hx2B
+    constructor
+    · apply hx1C
+    apply hx2D
 
   -- 2.o
   example (A B C : Set α) : A ×ˢ (B \ C) = A ×ˢ B \ A ×ˢ C := by
