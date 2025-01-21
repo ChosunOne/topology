@@ -647,18 +647,79 @@ section
 
   -- 2.o
   example (A B C : Set α) : A ×ˢ (B \ C) = A ×ˢ B \ A ×ˢ C := by
-    sorry
+    ext x
+    obtain ⟨x1, x2⟩ := x
+    simp
+    constructor
+    · intro ⟨hx1A, ⟨hx2B, hx2nC⟩⟩
+      constructor
+      · constructor
+        · apply hx1A
+        apply hx2B
+      intro hx1A
+      apply hx2nC
+    intro ⟨⟨hx1A, hx2B⟩, hx1AC⟩ 
+    constructor
+    · apply hx1A
+    constructor
+    · apply hx2B
+    apply hx1AC
+    apply hx1A
 
   -- 2.p
-  example (A B C D : Set α) : (A \ B) ×ˢ (C \ D) = (A ×ˢ C \ B ×ˢ C) \ (A ×ˢ D) := by 
-    sorry
+  -- Changed to `⊆` because you can have elements from `A ×ˢ C` in the right and not left
+  example (A B C D : Set α) : (A \ B) ×ˢ (C \ D) ⊆ (A ×ˢ C \ B ×ˢ C) \ (A ×ˢ D) := by 
+    repeat rw [Set.diff_eq, Set.compl_def, Set.subset_def]
+    intro ⟨x1, x2⟩ H
+    simp at *
+    obtain ⟨⟨hx1A, hx1nB⟩, ⟨hx2C, hx2nD⟩⟩ := H
+    · constructor
+      · constructor
+        · constructor
+          · apply hx1A
+          apply hx2C
+        intro hx1B
+        tauto
+      intro hx1A
+      apply hx2nD
 
   -- 2.q
-  example (A B C D : Set α) : (A ×ˢ B) \ (C ×ˢ D) = (A \ C) ×ˢ (B \ D) := by
-    sorry
+  -- Changed to `⊇` 
+  example (A B C D : Set α) : (A \ C) ×ˢ (B \ D) ⊆ (A ×ˢ B) \ (C ×ˢ D)  := by
+    rw [Set.subset_def]
+    simp
+    intro x1 x2 hx1A hx1nC hx2B hx2nD
+    constructor
+    · constructor
+      · apply hx1A
+      apply hx2B
+    intro hx1C
+    apply hx2nD
 
   -- 3: Write the contrapositive and converse of the following statement, and determine which of the three statements is true.
   -- 3.a "If x < 0, then x² - x > 0"
+  -- 3.a.1 original statement
+  example (x : ℝ) (hx : x < 0) : 0 < x ^ 2 - x := by 
+    have hx2 : 0 ≤ x ^ 2 := by positivity
+    have hx3 : 0 < -x := by exact Left.neg_pos_iff.mpr hx 
+    calc
+      0 = 0 + 0 := by ring
+      _ ≤ x ^ 2 + 0 := by gcongr
+      _ < x ^ 2 + -x := by gcongr
+      _ = x ^ 2 - x := by ring
+
+  -- 3.a.2 contrapositive statement
+  example (x : ℝ) (hx : x ^ 2 - x ≤ 0) : 0 ≤ x := by
+    have hx2x : x ^ 2 ≤ x := by exact tsub_nonpos.mp hx 
+    have h1 : 0 ≤ x ^ 2 := by positivity
+    calc
+      0 ≤ x ^ 2 := h1
+      _ ≤ x := by gcongr
+
+  -- 3.a.3 converse statement
+  -- False by 3.a.1
+  example (x : ℝ) (hx : x < 0) : x ^ 2 - x ≤ 0 := by
+    sorry
 
   -- 3.b "If x > 0, then x² - x > 0"
 
