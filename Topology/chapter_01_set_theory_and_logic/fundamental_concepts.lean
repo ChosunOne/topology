@@ -388,32 +388,142 @@ section
   -- Skipping 1 since that is already completed above
   -- 2. Determine which statements are true below.  If a statement is not true, reframe it so that it is by replacing the `=` symbol with the appropriate symbol.  If an `↔` statement is not true, determine which direction is true.
   -- 2.a
-  example (A B C : Set α) : A ⊆ B ∧ A ⊆ C ↔ A ⊆ (B ∪ C) := by 
-    sorry
+  -- only forward direction can be proved since ∃ A : Set α, A ⊆ (B ∩ C)
+  example (A B C : Set α) : A ⊆ B ∧ A ⊆ C → A ⊆ (B ∪ C) := by 
+    intro ⟨hA, hB⟩ 
+    dsimp [Set.subset_def] at *
+    intro x hx
+    left
+    apply hA
+    apply hx
 
   -- 2.b
-  example (A B C : Set α) : A ⊆ B ∨ A ⊆ C ↔ A ⊆ (B ∪ C) := by
-    sorry
+  -- only forward direction can be proved since ∃ A : Set α, A ⊆ (B ∩ C)
+  example (A B C : Set α) : A ⊆ B ∨ A ⊆ C → A ⊆ (B ∪ C) := by
+    intro H
+    obtain hAB | hAC := H
+    · dsimp [Set.subset_def] at *
+      intro x hxA
+      left
+      apply hAB
+      apply hxA
+    · dsimp [Set.subset_def] at *
+      intro x hxA
+      right
+      apply hAC
+      apply hxA
 
   -- 2.c
   example (A B C : Set α) : A ⊆ B ∧ A ⊆ C ↔ A ⊆ (B ∩ C) := by 
-    sorry
+    constructor
+    · intro ⟨hAB, hAC⟩ 
+      dsimp [Set.subset_def] at *
+      intro x hxA
+      constructor
+      · apply hAB
+        apply hxA
+      apply hAC
+      apply hxA
+    · intro H
+      dsimp [Set.subset_def] at *
+      constructor
+      · intro x hxA
+        apply H at hxA
+        obtain ⟨hxB, hxC⟩ := hxA
+        apply hxB
+      intro x hxA
+      apply H at hxA
+      obtain ⟨hxB, hxC⟩ := hxA
+      apply hxC
 
   -- 2.d
-  example (A B C : Set α) : A ⊆ B ∨ A ⊆ C ↔ A ⊆ (B ∪ C) := by
-    sorry
+  -- only the backward direction can be proved since ∃ A, A ⊆ B ∧ A ⊈ C
+  example (A B C : Set α) : A ⊆ (B ∩ C) → A ⊆ B ∨ A ⊆ C := by
+    intro H
+    dsimp [Set.subset_def] at *
+    left
+    intro x hxA
+    apply H at hxA
+    obtain ⟨hxB, hxC⟩ := hxA
+    apply hxB
 
   -- 2.e
   example (A B : Set α) : A \ (A \ B) = A \ B := by
     sorry
 
+  -- this becomes equivalent to A ∩ B, not A \ B
+  -- not sure how to prove A ∩ B ≠ A \ B yet,
+  -- but it leads to a contradiction around membership of B
+  example (A B : Set α) : A \ (A \ B) = A ∩ B := by
+    ext x
+    constructor
+    · intro hx
+      repeat rw [Set.diff_eq, Set.compl_def] at hx
+      dsimp at *
+      push_neg at *
+      obtain ⟨hxA, hxAB⟩ := hx
+      constructor
+      · apply hxA
+      apply hxAB
+      apply hxA
+    intro hxAB
+    repeat rw [Set.diff_eq, Set.compl_def]
+    dsimp at *
+    push_neg at *
+    obtain ⟨hxA, hxB⟩ := hxAB
+    constructor
+    · apply hxA
+    intro hxA2
+    apply hxB
+
   -- 2.f
   example (A B : Set α) : A \ (B \ A) = A \ B := by
     sorry
 
+  -- This becomes equivalent to A, not A \ B
+  -- A = A \ B ↔ A ∩ B = ∅
+  example (A B : Set α) : A \ (B \ A) = A := by 
+    ext x
+    repeat rw [Set.diff_eq, Set.compl_def]
+    constructor
+    · intro H
+      dsimp at H
+      push_neg at H
+      obtain ⟨hxA, hxBA⟩ := H
+      apply hxA
+    · intro hxA
+      dsimp
+      push_neg
+      constructor
+      · apply hxA
+      intro hxB
+      apply hxA
+
   -- 2.g
   example (A B C : Set α) : A ∩ (B \ C) = (A ∩ B) \ (A ∩ C) := by 
-    sorry
+    ext x
+    repeat rw [Set.diff_eq, Set.compl_def]
+    constructor
+    · intro H
+      dsimp at *
+      obtain ⟨hxA, hxB, hxnC⟩ := H
+      push_neg
+      constructor
+      · constructor
+        · apply hxA
+        apply hxB
+      intro hxA
+      apply hxnC
+    · intro H
+      dsimp at *
+      push_neg at *
+      obtain ⟨⟨hxA, hxB⟩, hxAnC⟩ := H
+      constructor
+      · apply hxA
+      constructor
+      · apply hxB
+      apply hxAnC
+      apply hxA
 
   -- 2.h
   example (A B C : Set α) : A ∪ (B \ C) = (A ∪ B) \ (A ∪ C) := by
