@@ -139,7 +139,6 @@ example (p q : Prop) : p → q ↔ ¬q → ¬p := by
 section
 def P (x : α) : Prop := sorry
 
-#check α
 #check P
 
 def B (X : Set α) := {b ∈ X | P b} 
@@ -526,16 +525,54 @@ section
       apply hxA
 
   -- 2.h
-  example (A B C : Set α) : A ∪ (B \ C) = (A ∪ B) \ (A ∪ C) := by
-    sorry
+  example (A B C : Set α) : (A ∪ B) \ (A ∪ C) ⊆ A ∪ (B \ C)   := by
+    intro x H
+    repeat rw [Set.diff_eq, Set.compl_def] at *
+    dsimp at *
+    push_neg at *
+    obtain ⟨hxA | hxB, ⟨hxnA, hxnC⟩⟩ := H
+    · left
+      apply hxA
+    right
+    constructor
+    · apply hxB
+    apply hxnC
 
   -- 2.i
   example (A B : Set α) : (A ∩ B) ∪ (A \ B) = A := by
-    sorry
+    ext x
+    repeat rw [Set.diff_eq, Set.compl_def]
+    dsimp
+    constructor
+    · intro H
+      obtain ⟨hxA, hxB⟩ | ⟨hxA, hxnB⟩ := H
+      · apply hxA
+      apply hxA
+    intro hxA
+    by_cases hxB : x ∈ B
+    · left
+      constructor
+      · apply hxA
+      apply hxB
+    · right
+      constructor
+      · apply hxA
+      apply hxB
 
   -- 2.j
   example (A B C D : Set α) : A ⊆ C ∧ B ⊆ D → (A ×ˢ B) ⊆ (C ×ˢ D) := by
-    sorry
+    simp
+    intro hAC hBD
+    dsimp [Set.subset_def] at *
+    intro (x1, x2) hx
+    obtain ⟨hx1A, hx2B⟩ := hx
+    dsimp at *
+    apply hAC at hx1A
+    apply hBD at hx2B
+    simp
+    constructor
+    · apply hx1A
+    apply hx2B
 
   -- 2.k
   example (A B C D : Set α) : A ⊆ C ∧ B ⊆ D → (A ×ˢ B) ⊈ (C ×ˢ D) := by
