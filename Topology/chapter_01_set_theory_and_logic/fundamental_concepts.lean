@@ -1,8 +1,7 @@
 import Mathlib.Data.Real.Basic
-import Mathlib.Tactic.Set
 import Mathlib.Data.Set.Basic
 import Duper
-import Mathlib.Tactic.Ring
+import Mathlib.Tactic
 import Mathlib.SetTheory.Cardinal.Basic
 open Cardinal
 
@@ -722,23 +721,42 @@ section
     sorry
 
   -- 3.b "If x > 0, then x² - x > 0"
+  -- None of the statements are true since the statement is only 
+  -- true when 0 < x < 1
+
+  -- 3.b.1 original statement
+  example (x : ℝ) (hx : x > 0) : 0 < x ^ 2 - x := by
+    sorry
+
+  -- 3.b.2 contrapositive statement
+  example (x : ℝ) (hx : x ^ 2 - x ≤ 0) : x > 0 := by
+    sorry
+
+  -- 3.b.3 converse statement
+  
+  example (x : ℝ) (hx : x > 0) : x ^ 2 - x ≤ 0 := by
+    sorry
 
   -- 4. Write the negation of the following statements
   -- 4.a
-  example (A B : Set ℝ) : ¬(∀ a ∈ A, a ^ 2 ∈ B) = sorry := by
-    sorry
+  example (A B : Set ℝ) : (¬(∀ a ∈ A, a ^ 2 ∈ B)) = ∃ a ∈ A, a ^ 2 ∉ B := by
+    push_neg
+    rfl
 
   -- 4.b
-  example (A B : Set ℝ) : ¬(∃ a ∈ A, a ^ 2 ∈ B) = sorry := by
-    sorry
+  example (A B : Set ℝ) : (¬(∃ a ∈ A, a ^ 2 ∈ B)) = ∀ a ∈ A, a ^ 2 ∉ B := by
+    push_neg
+    rfl
 
   -- 4.c
-  example (A B : Set ℝ) : ¬(∀ a ∈ A, a ^ 2 ∉ B) = sorry := by
-    sorry
+  example (A B : Set ℝ) : (¬(∀ a ∈ A, a ^ 2 ∉ B)) = ∃ a ∈ A, a ^ 2 ∈ B := by
+    push_neg
+    rfl
 
   -- 4.d
-  example (A B : Set ℝ) : ¬(∃ a ∉ A, a ^ 2 ∈ B) = sorry := by
-    sorry
+  example (A B : Set ℝ) : (¬(∃ a ∉ A, a ^ 2 ∈ B)) = ∀ a ∉ A, a ^ 2 ∉ B := by
+    push_neg
+    rfl
 
   -- 5. Determine which of the following and their converses are true
   -- 5.a
