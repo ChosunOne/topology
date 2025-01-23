@@ -733,7 +733,6 @@ section
     sorry
 
   -- 3.b.3 converse statement
-  
   example (x : ℝ) (hx : x > 0) : x ^ 2 - x ≤ 0 := by
     sorry
 
@@ -761,12 +760,15 @@ section
   -- 5. Determine which of the following and their converses are true
   -- 5.a
   example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋃ A ∈ 𝒜, A → ∃ A ∈ 𝒜, x ∈ A := by
-    sorry
-
-  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋃ A ∈ 𝒜, A → ¬(∃ A ∈ 𝒜, x ∈ A) := by
-    sorry
+    intro H
+    simp at H
+    obtain ⟨I, ⟨hIA, hxI⟩⟩ := H
+    use I
 
   -- 5.b
+  -- neither the statement nor its converse are true
+  -- `x` can be a member of only one set `A ∈ 𝒜` from 5.a
+
   example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋃ A ∈ 𝒜, A → ∀ A ∈ 𝒜, x ∈ A := by
     sorry
 
@@ -775,67 +777,125 @@ section
 
   -- 5.c
   example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋂ A ∈ 𝒜, A → ∃ A ∈ 𝒜, x ∈ A := by
-    sorry
-
-  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋂ A ∈ 𝒜, A → ¬(∃ A ∈ 𝒜, x ∈ A) := by
-    sorry
+    intro H
+    simp at H
+    rw [← nonempty_iff_ne_empty, Set.nonempty_def] at h𝒜 
+    obtain ⟨A, hxA⟩ := h𝒜
+    use A
+    constructor
+    · apply hxA
+    apply H
+    apply hxA
 
   -- 5.d
   example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋂ A ∈ 𝒜, A → ∀ A ∈ 𝒜, x ∈ A := by
+    intro H A hA𝒜 
+    simp at H
+    apply H
+    apply hA𝒜 
+
+  -- 6. Write the contrapositive for each of the statements in problem 5
+  -- 6.a
+  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : (¬ ∃ A ∈ 𝒜, x ∈ A) → ¬ x ∈ ⋃ A ∈ 𝒜, A := by
     sorry
 
-  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : x ∈ ⋂ A ∈ 𝒜, A → ¬(∀ A ∈ 𝒜, x ∈ A) := by
+  -- 6.b
+  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : (¬ ∀ A ∈ 𝒜, x ∈ A) → ¬ x ∈ ⋃ A ∈ 𝒜, A := by
     sorry
-  
-  -- 6. Write the contrapositive for each of the statements in problem 5
-  
+
+  -- 6.c
+  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : (¬ ∃ A ∈ 𝒜, x ∈ A) → ¬ x ∈ ⋂ A ∈ 𝒜, A := by 
+    sorry
+
+  -- 6.d
+  example (𝒜 : Set (Set α)) (x : α) (h𝒜 : 𝒜 ≠ ∅) : (¬ ∀ A ∈ 𝒜, x ∈ A) → ¬ x ∈ ⋂ A ∈ 𝒜, A := by 
+    sorry
+
   -- 7. Use `∪`, `∩`, or `\` to fill in the equivalent expression denoted with `sorry`
   -- 7.a 
-  example (A B C : Set α) : {x : α | x ∈ A ∧ (x ∈ B ∨ x ∈ C)} = sorry := by 
-    sorry
+  example (A B C : Set α) : {x : α | x ∈ A ∧ (x ∈ B ∨ x ∈ C)} = A ∩ (B ∪ C) := by 
+    rfl
 
   -- 7.b
-  example (A B C : Set α) : {x : α | (x ∈ A ∧ x ∈ B) ∨ x ∈ C} = sorry := by
-    sorry
+  example (A B C : Set α) : {x : α | (x ∈ A ∧ x ∈ B) ∨ x ∈ C} = (A ∩ B) ∪ C := by
+    rfl
 
   -- 7.c
-  example (A B C : Set α) : {x : α | x ∈ A ∧ (x ∈ B → x ∈ C)} = sorry := by
-    sorry
+  example (A B C : Set α) : {x : α | x ∈ A ∧ (x ∈ B → x ∈ C)} = A \ (B \ C) := by
+    ext x
+    simp
 
   -- 8
   -- Cardinality is represented by the `#` symbol
-  example (A : Set α) (hA : #A = 2) : #(𝒫 A) = 4 := by
-    sorry
+  example (A : Set α) (hA : #A = 2) : toNat #(𝒫 A) = 4 := by
+    rw [mk_powerset, hA]
+    norm_cast
 
-  example (A : Set α) (hA : #A = 1) : #(𝒫 A) = sorry := by
-    sorry
+  example (A : Set α) (hA : #A = 1) : toNat #(𝒫 A) = 2 := by
+    rw [mk_powerset, hA]
+    norm_cast
 
   -- 9.a
-  example (𝒜 : Set (Set α)) : ¬(⋃ A ∈ 𝒜, A) = sorry := by
-    sorry
+  example (A : Set α) (ℬ : Set (Set α)) (hℬ : ℬ ≠ ∅) : A \ (⋃ B ∈ ℬ, B) = ⋂ B ∈ ℬ, A \ B := by
+    ext x
+    simp
+    constructor
+    · intro ⟨hxA, H⟩ I hIB
+      constructor
+      · apply hxA
+      apply H
+      apply hIB
+    · intro H
+      rw [← nonempty_iff_ne_empty, nonempty_def] at hℬ 
+      obtain ⟨I, hIB⟩ := hℬ 
+      have h : x ∈ A ∧ x ∉ I := by 
+        apply H
+        apply hIB
+      obtain ⟨hxA, hxnI⟩ := h
+      constructor
+      · apply hxA
+      intro J hJℬ
+      have h : x ∈ A ∧ x ∉ J := by
+        apply H
+        apply hJℬ
+      obtain ⟨_, hxnJ⟩ := h
+      apply hxnJ
 
-  example (𝒜 : Set (Set α)) : ¬(⋂ A ∈ 𝒜, A) = sorry := by
-    sorry
+  example (A : Set α) (ℬ : Set (Set α)) (hℬ : ℬ ≠ ∅) : A \ ⋂ B ∈ ℬ, B = ⋃ B ∈ ℬ, A \ B := by
+    ext x
+    simp
+
+  -- Determine which of the following statements are true
+  def IsInteger (x : ℝ) : Prop := x = Int.floor x
 
   -- 10.a
-  def IsInteger (x : ℝ) : Prop := sorry
-
   example : ∃ X Y : Set ℝ, {(x, y) : ℝ × ℝ | IsInteger x} = X ×ˢ Y := by
-    sorry
+    use {x | IsInteger x}, {y : ℝ | True}
+    ext x
+    obtain ⟨x1, x2⟩ := x
+    simp
 
   -- 10.b
   example : ∃ X Y : Set ℝ, {(x, y) : ℝ × ℝ | 0 < y ∧ y ≤ 1} = X ×ˢ Y := by
-    sorry
+    use {x : ℝ | True}, {y : ℝ | 0 < y ∧ y ≤ 1}
+    ext x
+    obtain ⟨x1, x2⟩ := x
+    simp
 
   -- 10.c
+  -- This example cannot be completed
   example : ∃ X Y : Set ℝ, {(x, y) : ℝ × ℝ | x < y} = X ×ˢ Y := by 
     sorry
 
   -- 10.d
   example : ∃ X Y : Set ℝ, {(x, y) : ℝ × ℝ | ¬(IsInteger x) ∧ IsInteger y} = X ×ˢ Y := by
-    sorry
+    use {x : ℝ | ¬ IsInteger x}, {y : ℝ | IsInteger y}
+    ext x
+    obtain ⟨x1, x2⟩ := x
+    simp
 
   -- 10.e
+  -- This example cannot be completed
   example : ∃ X Y : Set ℝ, {(x, y) : ℝ × ℝ | x ^ 2 + y ^ 2 < 1} = X ×ˢ Y := by 
     sorry
 
