@@ -1,5 +1,6 @@
 import Mathlib
 import Mathlib.Data.Set.Basic
+import Mathlib.Tactic
 
 open Set
 
@@ -47,8 +48,30 @@ section
   -- You can make them anonymous like so
   #check fun (a : ℝ) ↦ a ^ 3 + 1
   #check preimage (fun (a : ℝ) ↦ a ^ 3 + 1) B
-  #check (fun (a : ℝ) ↦ a ^ 3 + 1)⁻¹' B
+  #check (fun (a : ℝ) ↦ a ^ 3 + 1) ⁻¹' B
   #check image (fun (a : ℝ) ↦ a ^ 3 + 1) B
   #check (fun (a : ℝ) ↦ a ^ 3 + 1) '' B
+end
 
+-- a.k.a Set.restrict
+def Restriction {α : Type u} {π : α → Type*} (A₀ : Set α) (f : ∀ a : α, π a) : ∀ a : A₀, π a 
+  := fun x ↦ f x
+
+def f2 (x : ℝ) := x ^ 2
+def nonnegative_reals := {x : ℝ | 0 ≤ x}
+section
+  local notation:1000 "ℝ₊" => nonnegative_reals
+  def g := Set.restrict (ℝ₊) f2
+  #check g
+  -- If we want to restrict the range of `f2` to `ℝ₊`, we need to use a subtype value
+  theorem h_nonneg : ∀ x : ℝ, f2 x ∈ ℝ₊ := by
+    intro x
+    rw [f2]
+    dsimp [nonnegative_reals]
+    exact sq_nonneg x
+  def h (x : ℝ) : ℝ₊ := ⟨f2 x, h_nonneg x⟩
+  #check h
+  def k := Set.restrict (ℝ₊) h
+  #check k
+  -- note that f2, g, h, and k are all different functions
 end
