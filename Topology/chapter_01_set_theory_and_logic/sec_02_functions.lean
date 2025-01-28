@@ -59,18 +59,19 @@ def Restriction {α : Type u} {π : α → Type*} (A₀ : Set α) (f : ∀ a : �
 
 def f2 (x : ℝ) := x ^ 2
 def nonnegative_reals := {x : ℝ | 0 ≤ x}
+local notation:1000 "ℝ₊" => nonnegative_reals
+theorem f2_nonneg : ∀ x : ℝ, f2 x ∈ ℝ₊ := by
+  intro x
+  rw [f2]
+  dsimp [nonnegative_reals]
+  exact sq_nonneg x
+def g : ℝ₊ → ℝ := Set.restrict nonnegative_reals f2
+
 section
-  local notation:1000 "ℝ₊" => nonnegative_reals
-  def g := Set.restrict (ℝ₊) f2
   #check g
   #eval g ⟨2, by dsimp [nonnegative_reals]; norm_num⟩
   -- If we want to restrict the range of `f2` to `ℝ₊`, we need to use a subtype value
-  theorem h_nonneg : ∀ x : ℝ, f2 x ∈ ℝ₊ := by
-    intro x
-    rw [f2]
-    dsimp [nonnegative_reals]
-    exact sq_nonneg x
-  def h (x : ℝ) : ℝ₊ := ⟨f2 x, h_nonneg x⟩
+  def h (x : ℝ) : ℝ₊ := ⟨f2 x, f2_nonneg x⟩
   #check h
   #eval h 2
   def k := Set.restrict (ℝ₊) h
@@ -167,3 +168,94 @@ theorem inverse_of_bijective_is_bijective {α : Type u} {β : Type v} (f : α �
       _ = b := by rfl
     apply this
 
+
+example : ¬ (Injective f2 ∨ Surjective f2) := by 
+  push_neg
+  constructor
+  · dsimp [Injective]
+    push_neg
+    use -1, 1
+    constructor
+    · rw [f2, f2]
+      norm_num
+    · norm_num
+  · dsimp [Surjective]
+    push_neg
+    use -1
+    intro a
+    rw [f2]
+    have ha : 0 ≤ a ^ 2 := by positivity
+    intro ha2
+    rw [ha2] at ha
+    norm_num at ha
+
+example : Injective g ∧ ¬ Surjective g := by 
+  constructor
+  · dsimp [Injective]
+    intro a₁ a₂ hg
+    dsimp [g] at hg
+    dsimp [f2] at hg
+    norm_num at hg
+    apply hg
+  · dsimp [Surjective]
+    push_neg
+    use -1
+    intro a hga
+    rw [g, restrict_apply] at hga
+    rw [f2] at hga
+    have : (0:ℝ) ≤ (a ^ 2:ℝ) := by norm_num
+    have := le_trans this (by exact hga.le)
+    norm_num at this
+
+set_option pp.proofs true
+
+example : Surjective h ∧ ¬ Injective h := by
+  constructor
+  · dsimp [Surjective]
+    intro b
+    dsimp [h]
+    dsimp [f2]
+    dsimp [nonnegative_reals] at b
+    obtain ⟨b, hb⟩ := b
+    have hsqrtb : √b ^ 2 = b := by
+      exact Real.sq_sqrt hb
+    use √b
+    simp
+    exact hsqrtb
+  · dsimp [Injective]
+    push_neg
+    use 1, -1
+    dsimp [h, f2]
+    simp
+    norm_num
+
+example : Bijective k := by 
+  constructor
+  · dsimp[Injective]
+    intro a₁ a₂ H
+    dsimp [k, h] at H
+    simp at H
+    dsimp [f2] at H
+    dsimp [nonnegative_reals] at a₁
+    dsimp [nonnegative_reals] at a₂
+    obtain ⟨a₁, ha₁⟩ := a₁
+    obtain ⟨a₂, ha₂⟩ := a₂
+    norm_cast at H
+    simp at H
+    apply H
+  · dsimp [Surjective]
+    intro b
+    obtain ⟨b, hb⟩ := b
+    dsimp [nonnegative_reals] at hb
+    dsimp [k, h, f2]
+    set b_sqrt := √b
+    have hsqrtb : b_sqrt ^ 2 = b := by
+      exact Real.sq_sqrt hb
+    have hsqrtb_pos : 0 ≤ b_sqrt := by 
+      exact Real.sqrt_nonneg b
+    have hsqrtb_nonneg: b_sqrt ∈ ℝ₊ := by
+      dsimp [nonnegative_reals]
+      apply hsqrtb_pos
+    use ⟨b_sqrt, hsqrtb_nonneg⟩ 
+    simp
+    exact hsqrtb
