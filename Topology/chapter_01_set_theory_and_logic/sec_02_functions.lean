@@ -259,3 +259,58 @@ example : Bijective k := by
     use ⟨b_sqrt, hsqrtb_nonneg⟩ 
     simp
     exact hsqrtb
+
+lemma two_one {α : Type u} {β : Type v} (f : α → β) (g : β → α) (h : β → α) (hgf : ∀ a : α, (g ∘ f) a = a) (hfh : ∀ b : β, (f ∘ h) b = b) : 
+    Bijective f ∧ g = h ∧ Inverse f h := by 
+    constructor
+    · constructor
+      · dsimp [Injective]
+        intro a₁ a₂ H
+        have h1 : (g ∘ f) a₁ = a₁ := by apply hgf
+        have h2 : (g ∘ f) a₂ = a₂ := by apply hgf
+        calc
+          a₁ = (g ∘ f) a₁ := by rw [h1]
+          _ = g (f a₁) := by rfl
+          _ = g (f a₂) := by rw [H]
+          _ = (g ∘ f) a₂ := by rfl
+          _ = a₂ := by rw [h2]
+      · dsimp [Surjective]
+        intro b
+        use h b
+        exact hfh b
+    · constructor
+      · ext b
+        set a₁ := g b
+        set a₂ := h b
+        have h1 : f a₂ = b := by
+          dsimp [a₂]
+          apply hfh b
+        have h2 : (g ∘ f) a₂ = a₁ := by
+          dsimp [a₂]
+          dsimp [a₁]
+          calc
+            g (f (h b)) = g ((f ∘ h) b) := by rfl
+            _ = g b := by exact congrArg g (hfh b)
+        have h3 : (g ∘ f) a₂ = a₂ := by apply hgf
+        have := by calc
+          a₂ = (g ∘ f) a₂ := by rw [h3]
+          _ = a₁ := by rw [h2]
+        rw [this]
+      · dsimp [Inverse]
+        constructor
+        · ext a
+          simp
+          set b := f a
+          have h1 : (f ∘ h) b = b := by apply hfh
+          have h2 : (g ∘ f) a = a := by apply hgf
+          have := calc
+            a = (g ∘ f) a := by rw [h2]
+            _ = g (f a) := by rfl
+            _ = g b := by rfl
+            _ = g ((f ∘ h) b) := by rw [h1]
+            _ = (g ∘ f) (h b) := by rfl
+            _ = h b := by exact hgf (h b)
+          rw [this]
+        · ext b
+          simp
+          apply hfh
