@@ -7,7 +7,7 @@ open Set
 universe u v w
 
 -- The subset of `C` such that there exists an element in `D` that the pair `(c, d)` is in `r`
--- In mathlib, this is denoted by `preimage f B` or `f ⁻¹' B`
+-- a.k.a. the preimage of the range of the function
 def Domain {α : Type u} {β : Type v} {C : Set α} {D : Set β} (r : Set (α × β)) {_ : r ⊆ C ×ˢ D} : Set α 
   := {c ∈ C | ∃ d ∈ D, (c, d) ∈ r}
 
@@ -314,3 +314,192 @@ lemma two_one {α : Type u} {β : Type v} (f : α → β) (g : β → α) (h : �
         · ext b
           simp
           apply hfh
+
+-- This is similar to the image of a function, but restricted to the given set
+-- equivalent to `image f A₀`
+-- sometimes denoted as `f(A₀)`
+def SetImage {α : Type u} {β : Type v} (f : α → β) (A₀ : Set α) := { b | ∃ a, a ∈ A₀ ∧ f a = b }
+
+#check image h {x | True}
+#check SetImage h {x | True}
+
+-- In mathlib, this is denoted by `preimage f B` or `f ⁻¹' B`
+def SetPreImage {α : Type u} {β : Type v} (f : α → β) (B₀ : Set β) := { a | f a ∈ B₀ }
+
+#check preimage h {x | True}
+#check SetPreImage h {x | True}
+
+-- Note that it is not always true that `f⁻¹' ∘ f a = a` or `f ∘ f⁻¹' b = b`
+
+theorem image_preimage_inversion {α : Type u} {β : Type v} (f : α → β) (A₀ : Set α) (B₀ : Set β) : 
+    A₀ ⊆ f⁻¹' (f '' A₀) ∧ f '' (f⁻¹' B₀) ⊆ B₀ := by 
+  constructor
+  · dsimp [Set.subset_def]
+    intro a haA
+    rw [mem_preimage, mem_image]
+    use a 
+  · dsimp [Set.subset_def]
+    intro b hb
+    rw [mem_image] at hb
+    obtain ⟨x, ⟨hx, hfxb⟩⟩ := hb
+    rw [mem_preimage] at hx
+    rw [← hfxb]
+    apply hx
+
+-- Exercises
+namespace Exercises
+
+def α := Type u
+def β := Type v
+def γ := Type w
+
+-- 1.a
+example (f : α → β) (A₀ : Set α) (B₀ : Set β) (hf : Injective f) : 
+  A₀ ⊆ f⁻¹' (f '' A₀) := by
+  sorry
+
+-- 1.b
+example (f : α → β) (A₀ : Set α) (B₀ : Set β) (hf : Surjective f) : 
+  f '' (f⁻¹' B₀) ⊆ B₀ := by
+  sorry
+
+-- 2.a
+example (f : α → β) (B₀ B₁ : Set β) : 
+  B₀ ⊆ B₁ → f⁻¹' B₀ ⊆ f⁻¹' B₁ := by
+  sorry
+
+-- 2.b
+example (f : α → β) (B₀ B₁ : Set β) :
+  f⁻¹' (B₀ ∪ B₁) = f⁻¹' B₀ ∪ f⁻¹' B₁ := by
+  sorry
+
+-- 2.c
+example (f : α → β) (B₀ B₁ : Set β) :
+  f⁻¹' (B₀ ∩ B₁) = f⁻¹' B₀ ∩ f⁻¹' B₁ := by
+  sorry
+
+-- 2.d
+example (f : α → β) (B₀ B₁ : Set β) :
+  f⁻¹' (B₀ \ B₁) = f⁻¹' B₀ \ f⁻¹' B₁ := by
+  sorry
+
+-- 2.e
+example (f : α → β) (A₀ A₁ : Set α) :
+  A₀ ⊆ A₁ → f '' A₀ ⊆ f '' A₁ := by
+  sorry
+
+-- 2.f
+example (f : α → β) (A₀ A₁ : Set α) : 
+  f '' (A₀ ∪ A₁) = f '' A₀ ∪ f '' A₁ := by
+  sorry
+
+-- 2.g
+example (f : α → β) (A₀ A₁ : Set α) :
+  f '' (A₀ ∩ A₁) ⊆ f '' A₀ ∩ f '' A₁ := by
+  sorry
+
+-- 2.h
+example (f : α → β) (A₀ A₁ : Set α) :
+  f '' A₀ \ f '' A₁ ⊆ f '' (A₀ \ A₁) := by
+  sorry
+
+-- 3.a
+example (f : α → β) (ℬ : Set (Set β)) :
+  f⁻¹' ⋃ Bᵢ∈ ℬ, Bᵢ= ⋃ Bᵢ∈ ℬ, f⁻¹' Bᵢ := by
+  sorry
+
+-- 3.b
+example (f : α → β) (ℬ : Set (Set β)) :
+  f⁻¹' ⋂ Bᵢ∈ ℬ, Bᵢ= ⋂ Bᵢ∈ ℬ, f⁻¹' Bᵢ := by
+  sorry
+
+-- 3.c
+example (f : α → β) (𝒜 : Set (Set α)) :
+  f '' ⋃ Aᵢ∈ 𝒜, Aᵢ= ⋃ Aᵢ∈ 𝒜, f '' Aᵢ := by
+  sorry
+
+-- 3.d
+example (f : α → β) (𝒜 : Set (Set α)) :
+  ⋂ Aᵢ∈ 𝒜, f '' Aᵢ⊆ f '' ⋂ Aᵢ∈ 𝒜 , Aᵢ:= by
+  sorry
+
+-- 4.a
+example (f : α → β) (g : β → γ) (C₀ : Set γ) :
+  (g ∘ f)⁻¹' C₀ = f⁻¹' (g⁻¹' C₀) := by
+  sorry
+
+-- 4.b
+example (f : α → β) (g : β → γ) (hf : Injective f) (hg : Injective g) :
+  Injective (g ∘ f) := by
+  sorry
+
+-- 4.c
+-- What can you say with the following hypotheses regarding the injectivity of g and f?
+example (f : α → β) (g : β → γ) (hfg : Injective (g ∘ f)) : sorry := by
+  sorry
+
+-- 4.d
+example (f : α → β) (g : β → γ) (hf : Surjective f) (hg : Surjective g) :
+    Surjective (g ∘ f) := by
+  sorry
+
+-- 4.e
+-- What can you say with the following hypotheses regarding the surjectivity of g and f?
+example (f : α → β) (g : β → γ) (hfg : Surjective (g ∘ f)) : sorry := by
+  sorry
+
+-- 4.f
+-- Write a theorem summarizing the results from 4.b-e
+example (f : α → β) (g : β → γ) : sorry := by
+  sorry
+
+-- 5.a
+def LeftInverse {α : Type u} {β : Type v} (f : α → β) (g : β → α) := g ∘ f = id
+def RightInverse' {α : Type u} {β : Type v} (f : α → β) (h : β → α) := f ∘ h = id
+
+example (f : α → β) (g : β → α) (hg : LeftInverse f g) : Injective f := by
+  sorry
+
+example (f : α → β) (h : β → α) (hh : RightInverse' f h) : Surjective f := by
+  sorry
+
+-- 5.b
+def f_no_right_inverse (a : α) : β := sorry
+
+example (g : β → α) (hg : LeftInverse f_no_right_inverse g) : ¬∃ h : β → α, RightInverse' f_no_right_inverse h := by
+  sorry
+
+-- 5.c
+def f_no_left_inverse (a : α) : β := sorry
+
+example (h : β → α) (hh : RightInverse' f_no_left_inverse h) : ¬∃ g : β → α, LeftInverse f_no_left_inverse g := by
+  sorry
+
+-- 5.d
+-- prove or disprove the goal
+example (f : α → β) (g : β → α) (hg : LeftInverse f g) : ∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
+  sorry
+
+example (f : α → β) (g : β → α) (hg : LeftInverse f g) : ¬∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
+  sorry
+
+example (f : α → β) (g : β → α) (hg : RightInverse' f g) : ∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
+  sorry
+
+example (f : α → β) (g : β → α) (hg : RightInverse' f g) : ¬∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
+  sorry
+
+-- 5.e
+example (f : α → β) (g h : β → α) (hg : LeftInverse f g) (hh : RightInverse' f h) : Bijective f ∧ g = h ∧ Inverse f h := by
+  sorry
+
+-- 6.
+-- Fill out function `g` by restricting `f` appropriately
+def f (x : ℝ) := x ^ 3 - x
+
+def g (x : sorry) : sorry := sorry
+
+example : Bijective g := by 
+  sorry
+
+end Exercises
