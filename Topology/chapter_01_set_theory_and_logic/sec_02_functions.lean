@@ -536,32 +536,79 @@ example (f : α → β) (𝒜 : Set (Set α)) (h𝒜 : 𝒜 ≠ ∅) :
 -- 4.a
 example (f : α → β) (g : β → γ) (C₀ : Set γ) :
   (g ∘ f)⁻¹' C₀ = f⁻¹' (g⁻¹' C₀) := by
-  sorry
+  ext a
+  constructor
+  · intro ha
+    simp at *
+    apply ha
+  · intro ha
+    simp at *
+    apply ha
 
 -- 4.b
 example (f : α → β) (g : β → γ) (hf : Injective f) (hg : Injective g) :
   Injective (g ∘ f) := by
-  sorry
+  dsimp [Injective] at *
+  intro a₁ a₂ H
+  have : g (f a₁) = g (f a₂) → f a₁ = f a₂ := by apply hg
+  apply this at H
+  apply hf
+  apply H
 
 -- 4.c
 -- What can you say with the following hypotheses regarding the injectivity of g and f?
-example (f : α → β) (g : β → γ) (hfg : Injective (g ∘ f)) : sorry := by
-  sorry
+-- We can easily prove the injectivity of f, but we can't say anything about the injectivity
+-- of g because the range of f may not cover the domain of g (Surjectivity of f).
+example (f : α → β) (g : β → γ) (hfg : Injective (g ∘ f)) : Injective f := by
+  dsimp [Injective] at *
+  intro a₁ a₂ H
+  have : g (f a₁) = g (f a₂) → a₁ = a₂ := by apply hfg
+  apply this
+  rw [H]
 
 -- 4.d
 example (f : α → β) (g : β → γ) (hf : Surjective f) (hg : Surjective g) :
     Surjective (g ∘ f) := by
-  sorry
+  dsimp [Surjective] at *
+  intro c
+  have : ∃ b, g b = c := by apply hg
+  obtain ⟨b, hgbc⟩ := this
+  have : ∃ a, f a = b := by apply hf
+  obtain ⟨a, hfab⟩ := this
+  use a
+  rw [hfab, hgbc]
 
 -- 4.e
 -- What can you say with the following hypotheses regarding the surjectivity of g and f?
-example (f : α → β) (g : β → γ) (hfg : Surjective (g ∘ f)) : sorry := by
-  sorry
+-- We can prove the Surjectivity of g but not f since the Injectivity of g is not known
+example (f : α → β) (g : β → γ) (hfg : Surjective (g ∘ f)) : Surjective g := by
+  dsimp [Surjective] at *
+  intro c
+  have : ∃ a, g (f a) = c := by apply hfg
+  obtain ⟨a, hgfac⟩ := this
+  use f a
 
 -- 4.f
 -- Write a theorem summarizing the results from 4.b-e
-example (f : α → β) (g : β → γ) : sorry := by
-  sorry
+example (f : α → β) (g : β → γ) : Bijective (g ∘ f) → Injective f ∧ Surjective g := by
+  intro H
+  dsimp [Bijective] at H
+  obtain ⟨h_inj, h_surj⟩ := H
+  have hf_inj : Injective f := by
+    dsimp [Injective] at *
+    intro a₁ a₂ H
+    have : g (f a₁) = g (f a₂) → a₁ = a₂ := by apply h_inj
+    apply this
+    rw [H]
+  have hg_surj : Surjective g := by
+    dsimp [Surjective] at *
+    intro c
+    have : ∃ a, g (f a) = c := by apply h_surj
+    obtain ⟨a, hgfac⟩ := this
+    use f a
+  constructor
+  · apply hf_inj
+  · apply hg_surj
 
 -- 5.a
 def LeftInverse {α : Type u} {β : Type v} (f : α → β) (g : β → α) := g ∘ f = id
