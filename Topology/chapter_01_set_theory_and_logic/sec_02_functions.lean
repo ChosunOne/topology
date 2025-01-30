@@ -356,72 +356,182 @@ def γ := Type w
 -- 1.a
 example (f : α → β) (A₀ : Set α) (B₀ : Set β) (hf : Injective f) : 
   A₀ ⊆ f⁻¹' (f '' A₀) := by
-  sorry
+  dsimp [Set.subset_def]
+  intro x hxA
+  use x
 
 -- 1.b
 example (f : α → β) (A₀ : Set α) (B₀ : Set β) (hf : Surjective f) : 
   f '' (f⁻¹' B₀) ⊆ B₀ := by
-  sorry
+  dsimp [Set.subset_def]
+  intro x hx
+  simp at hx
+  obtain ⟨x1, ⟨hfx1, hfx2⟩⟩ := hx
+  rw [hfx2] at hfx1
+  apply hfx1
 
 -- 2.a
 example (f : α → β) (B₀ B₁ : Set β) : 
   B₀ ⊆ B₁ → f⁻¹' B₀ ⊆ f⁻¹' B₁ := by
-  sorry
+  intro H
+  rw [Set.subset_def] at *
+  intro x hx
+  simp at hx
+  simp
+  apply H
+  apply hx
 
 -- 2.b
 example (f : α → β) (B₀ B₁ : Set β) :
   f⁻¹' (B₀ ∪ B₁) = f⁻¹' B₀ ∪ f⁻¹' B₁ := by
-  sorry
+  simp
 
 -- 2.c
 example (f : α → β) (B₀ B₁ : Set β) :
   f⁻¹' (B₀ ∩ B₁) = f⁻¹' B₀ ∩ f⁻¹' B₁ := by
-  sorry
+  simp
 
 -- 2.d
 example (f : α → β) (B₀ B₁ : Set β) :
   f⁻¹' (B₀ \ B₁) = f⁻¹' B₀ \ f⁻¹' B₁ := by
-  sorry
+  simp
 
 -- 2.e
 example (f : α → β) (A₀ A₁ : Set α) :
   A₀ ⊆ A₁ → f '' A₀ ⊆ f '' A₁ := by
-  sorry
+  intro H
+  rw [Set.subset_def] at *
+  intro x hx
+  simp
+  simp at hx
+  obtain ⟨x1, ⟨hx1, hx2⟩⟩ := hx
+  use x1
+  constructor
+  · apply H
+    apply hx1
+  apply hx2
 
 -- 2.f
+-- a.k.a. `image_union` in Mathlib
 example (f : α → β) (A₀ A₁ : Set α) : 
-  f '' (A₀ ∪ A₁) = f '' A₀ ∪ f '' A₁ := by
-  sorry
+  f '' (A₀ ∪ A₁) = (f '' A₀) ∪ (f '' A₁) := by
+  dsimp [image]
+  ext x
+  constructor
+  · intro H
+    simp at H
+    obtain ⟨a, ⟨ha, hfax⟩⟩ := H
+    simp
+    obtain ha | ha := ha
+    · left
+      use a
+    · right
+      use a
+  · intro H
+    simp at H
+    obtain ⟨a, ⟨ha, hfax⟩⟩ | ⟨a, ⟨ha, hfax⟩⟩ := H
+    · dsimp
+      use a
+      constructor
+      · simp
+        left
+        apply ha
+      apply hfax
+    · dsimp
+      use a
+      constructor
+      · simp
+        right
+        apply ha
+      apply hfax
 
 -- 2.g
+-- a.k.a. `image_inter_subset` in Mathlib
 example (f : α → β) (A₀ A₁ : Set α) :
   f '' (A₀ ∩ A₁) ⊆ f '' A₀ ∩ f '' A₁ := by
-  sorry
+  rw [Set.subset_def]
+  intro b hb
+  dsimp [image] at *
+  simp
+  obtain ⟨a, ⟨⟨haA₀, haA₁⟩, hfab⟩⟩ := hb
+  constructor <;> use a
 
 -- 2.h
 example (f : α → β) (A₀ A₁ : Set α) :
   f '' A₀ \ f '' A₁ ⊆ f '' (A₀ \ A₁) := by
-  sorry
+  rw [Set.subset_def]
+  intro b hb
+  obtain ⟨⟨a, ⟨haA₀, hfab⟩⟩, hnbA₁⟩ := hb
+  simp at *
+  use a
+  constructor
+  · constructor
+    · apply haA₀
+    intro haA₁
+    apply hnbA₁ at haA₁
+    contradiction
+  apply hfab
 
 -- 3.a
+-- a.k.a. `preimage_iUnion₂` in Mathlib
 example (f : α → β) (ℬ : Set (Set β)) :
   f⁻¹' ⋃ Bᵢ∈ ℬ, Bᵢ= ⋃ Bᵢ∈ ℬ, f⁻¹' Bᵢ := by
-  sorry
+  simp
 
 -- 3.b
+-- a.k.a. `preimage_iInter₂` in Mathlib
 example (f : α → β) (ℬ : Set (Set β)) :
   f⁻¹' ⋂ Bᵢ∈ ℬ, Bᵢ= ⋂ Bᵢ∈ ℬ, f⁻¹' Bᵢ := by
-  sorry
+  dsimp [preimage]
+  ext x
+  dsimp
+  constructor
+  · intro hx
+    simp
+    intro Bᵢ hBᵢ
+    simp at hx
+    apply hx
+    apply hBᵢ
+  · intro hx
+    simp at *
+    apply hx
 
 -- 3.c
+-- a.k.a. `image_IUnion₂`
 example (f : α → β) (𝒜 : Set (Set α)) :
   f '' ⋃ Aᵢ∈ 𝒜, Aᵢ= ⋃ Aᵢ∈ 𝒜, f '' Aᵢ := by
-  sorry
+  ext b
+  simp
+  constructor
+  · intro H
+    obtain ⟨a, ⟨⟨A, ⟨hA𝒜, haA⟩⟩, hfab⟩⟩ := H
+    use A
+    constructor
+    · apply hA𝒜
+    · use a
+  · intro H
+    obtain ⟨A, ⟨hA𝒜 , ⟨a, ⟨haA, hfab⟩⟩⟩⟩ := H
+    use a
+    constructor
+    · use A
+    · apply hfab
 
 -- 3.d
-example (f : α → β) (𝒜 : Set (Set α)) :
-  ⋂ Aᵢ∈ 𝒜, f '' Aᵢ⊆ f '' ⋂ Aᵢ∈ 𝒜 , Aᵢ:= by
-  sorry
+-- a.k.a. `image_iInter₂_subset` in Mathlib
+example (f : α → β) (𝒜 : Set (Set α)) (h𝒜 : 𝒜 ≠ ∅) :
+  f '' ⋂ Aᵢ∈ 𝒜 , Aᵢ ⊆ ⋂ Aᵢ∈ 𝒜, f '' Aᵢ:= by
+  rw [Set.subset_def]
+  intro b hb
+  rw [← nonempty_iff_ne_empty, Set.nonempty_def] at h𝒜 
+  obtain ⟨A, hA⟩ := h𝒜 
+  simp at *
+  obtain ⟨a, ⟨hA𝒜, hfab⟩⟩ := hb
+  intro A hA
+  use a
+  constructor
+  · apply hA𝒜 
+    apply hA
+  apply hfab
 
 -- 4.a
 example (f : α → β) (g : β → γ) (C₀ : Set γ) :
