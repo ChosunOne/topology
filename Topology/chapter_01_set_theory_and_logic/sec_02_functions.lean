@@ -615,10 +615,39 @@ def LeftInverse {α : Type u} {β : Type v} (f : α → β) (g : β → α) := g
 def RightInverse' {α : Type u} {β : Type v} (f : α → β) (h : β → α) := f ∘ h = id
 
 example (f : α → β) (g : β → α) (hg : LeftInverse f g) : Injective f := by
-  sorry
+  dsimp [LeftInverse] at hg
+  dsimp [Injective]
+  intro a₁ a₂ h
+  let ga₁ := g (f a₁)
+  let ga₂ := g (f a₂)
+  have hga₁ : ga₁ = a₁ := by 
+    dsimp [ga₁]
+    calc
+      g (f a₁) = (g ∘ f) a₁ := by rfl
+      _ = id a₁ := by rw [hg]
+      _ = a₁ := by rfl
+  have hga₂ : ga₂ = a₂ := by 
+    dsimp [ga₂]
+    calc
+      g (f a₂) = (g ∘ f) a₂ := by rfl
+      _ = id a₂ := by rw [hg]
+      _ = a₂ := by rfl
+  calc
+    a₁ = ga₁ := by rw [hga₁]
+    _ = g (f a₁) := by dsimp
+    _ = g (f a₂) := by rw [h]
+    _ = ga₂ := by dsimp
+    _ = a₂ := by rw [hga₂]
+
 
 example (f : α → β) (h : β → α) (hh : RightInverse' f h) : Surjective f := by
-  sorry
+  dsimp [Surjective]
+  intro b
+  dsimp [RightInverse'] at hh
+  use h b
+  calc
+    f (h b) = (f ∘ h) b := by rfl
+    _ = id b := by rw [hh]
 
 -- 5.b
 def f_no_right_inverse (a : α) : β := sorry
