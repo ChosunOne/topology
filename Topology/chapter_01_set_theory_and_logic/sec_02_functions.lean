@@ -3,6 +3,7 @@ import Mathlib.Data.Set.Basic
 import Mathlib.Tactic
 
 open Set
+open Classical
 
 universe u v w
 
@@ -650,24 +651,122 @@ example (f : α → β) (h : β → α) (hh : RightInverse' f h) : Surjective f 
     _ = id b := by rw [hh]
 
 -- 5.b
-def f_no_right_inverse (a : α) : β := sorry
+def f_no_right_inverse (x : ℕ) : ℕ := 2 ^ x
 
-example (g : β → α) (hg : LeftInverse f_no_right_inverse g) : ¬∃ h : β → α, RightInverse' f_no_right_inverse h := by
-  sorry
+#eval f_no_right_inverse 3
+#eval Nat.log2 (f_no_right_inverse 3)
+
+example : ∃ g : ℕ → ℕ, LeftInverse f_no_right_inverse g := by
+  use fun x => Nat.log2 x
+  dsimp [LeftInverse]
+  ext x
+  dsimp [f_no_right_inverse]
+  simp
+
+example : ¬∃ h : ℕ → ℕ, RightInverse' f_no_right_inverse h := by
+  dsimp [RightInverse']
+  push_neg
+  intro h H
+  have hf_nri : ∀ x : ℕ, 1 ≤ f_no_right_inverse x := by
+    intro x
+    dsimp [f_no_right_inverse]
+    exact Nat.one_le_two_pow
+  have hf_nri_2 : ¬∃ x : ℕ, f_no_right_inverse x < 1 := by
+    push_neg
+    apply hf_nri
+  apply hf_nri_2
+  use h 0
+  calc
+    f_no_right_inverse (h 0) = (f_no_right_inverse ∘ h) 0 := by rfl
+    _ = id 0 := by rw [H]
+    _ = 0 := by rfl
+  norm_num
 
 -- 5.c
-def f_no_left_inverse (a : α) : β := sorry
+def f_no_left_inverse (a : ℕ) : ℕ := Nat.log2 a
 
-example (h : β → α) (hh : RightInverse' f_no_left_inverse h) : ¬∃ g : β → α, LeftInverse f_no_left_inverse g := by
-  sorry
+#eval (f_no_left_inverse 1)
+#eval f_no_left_inverse (2 ^ 0)
+
+example : ∃ h : ℕ → ℕ, RightInverse' f_no_left_inverse h := by
+  use fun x => 2 ^ x
+  ext x
+  dsimp [f_no_left_inverse]
+  simp
+
+example : ¬∃ g : ℕ → ℕ, LeftInverse f_no_left_inverse g := by
+  dsimp [LeftInverse]
+  intro ⟨g, hg⟩ 
+  have : ∃ x y: ℕ, f_no_left_inverse x = f_no_left_inverse y ∧ x ≠ y := by
+    use 0, 1 
+    constructor
+    · dsimp [f_no_left_inverse]
+      unfold Nat.log2
+      simp
+    · norm_num
+  obtain ⟨x, ⟨y, ⟨hfxy, hxy⟩⟩⟩ := this
+  apply hxy
+  calc
+    x = id x := by rfl
+    _ = (g ∘ f_no_left_inverse) x := by rw [hg]
+    _ = g (f_no_left_inverse x) := by rfl
+    _ = g (f_no_left_inverse y) := by rw [hfxy]
+    _ = (g ∘ f_no_left_inverse) y := by rfl
+    _ = id y := by rw [hg]
+    _ = y := by rfl
 
 -- 5.d
--- prove or disprove the goal
-example (f : α → β) (g : β → α) (hg : LeftInverse f g) : ∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
-  sorry
+-- The question is open ended, so it suffices to show one scenario in which there can be multiple distinct left inverses.  The answer here will demonstrate that, though it remains open whether or not the injectivity of g is a 
+-- necessary condition.
+-- We can definitely show that if f is not surjective but g is injective, there can be more than one left inverse
+example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hg2 : Injective g) (hf_nsurj : ¬ Surjective f) : ∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
+  dsimp [LeftInverse, Surjective] at *
+  push_neg at *
+  obtain ⟨b, hb⟩ := hf_nsurj
+  let c := g b
+  let d := f c
+  have hdnb : d ≠ b := by
+    dsimp [d]
+    apply hb
+  use fun x => if x = b then g d else g x
+  constructor
+  · ext a
+    simp
+    split_ifs with hfab
+    · have : f a ≠ b := by apply hb
+      contradiction
+    calc
+      g (f a) = (g ∘ f) a := by rfl
+      _ = id a := by rw [hg]
+  · simp
+    rw [funext_iff]
+    push_neg
+    use b
+    split_ifs with H
+    · intro this
+      apply hg2 at this
+      contradiction
+    · contradiction
 
-example (f : α → β) (g : β → α) (hg : LeftInverse f g) : ¬∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
-  sorry
+-- We can definitely show that if f is surjective, there cannot be more than one left inverse
+example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hf_surj : Surjective f) : ¬∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
+  intro H
+  obtain ⟨h, ⟨hfh, hhg⟩⟩ := H
+  have : ∃ b : β, h b ≠ g b := by
+    exact Function.ne_iff.mp hhg
+  obtain ⟨b, hb⟩ := this
+  dsimp [LeftInverse] at *
+  dsimp [Surjective] at *
+  have : ∃ a, f a = b := by apply hf_surj
+  obtain ⟨a, hfab⟩ := this
+  apply hb
+  calc
+    h b = h (f a) := by rw [hfab]
+    _ = (h ∘ f) a := by rfl
+    _ = id a := by rw [hfh]
+    _ = (g ∘ f) a := by rw [hg]
+    _ = g (f a) := by rfl
+    _ = g b := by rw [hfab]
 
 example (f : α → β) (g : β → α) (hg : RightInverse' f g) : ∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
   sorry
