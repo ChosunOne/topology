@@ -612,7 +612,9 @@ example (f : α → β) (g : β → γ) : Bijective (g ∘ f) → Injective f �
   · apply hg_surj
 
 -- 5.a
+-- a.k.a Function.LeftInverse
 def LeftInverse {α : Type u} {β : Type v} (f : α → β) (g : β → α) := g ∘ f = id
+-- a.k.a Function.RightInverse
 def RightInverse' {α : Type u} {β : Type v} (f : α → β) (h : β → α) := f ∘ h = id
 
 example (f : α → β) (g : β → α) (hg : LeftInverse f g) : Injective f := by
@@ -752,9 +754,8 @@ example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hg2 : Injective 
 example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hf_surj : Surjective f) : ¬∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
   intro H
   obtain ⟨h, ⟨hfh, hhg⟩⟩ := H
-  have : ∃ b : β, h b ≠ g b := by
-    exact Function.ne_iff.mp hhg
-  obtain ⟨b, hb⟩ := this
+  rw [Function.ne_iff] at hhg
+  obtain ⟨b, hb⟩ := hhg
   dsimp [LeftInverse] at *
   dsimp [Surjective] at *
   have : ∃ a, f a = b := by apply hf_surj
@@ -768,11 +769,58 @@ example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hf_surj : Surjec
     _ = g (f a) := by rfl
     _ = g b := by rw [hfab]
 
-example (f : α → β) (g : β → α) (hg : RightInverse' f g) : ∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
-  sorry
+-- We can prove that g can't be a left inverse if f is not injective
+example (f : α → β) (g : β → α) (hf_ninj : ¬Injective f) (hg2 : LeftInverse f g) : ¬∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
+  dsimp [Surjective, Injective, RightInverse', LeftInverse] at *
+  push_neg at *
+  obtain ⟨a₁, ⟨a₂, ⟨hfa, haa⟩⟩⟩ := hf_ninj
+  have : a₁ = a₂ := by calc
+    a₁ = id a₁ := by rfl
+    _ = (g ∘ f) a₁ := by rw [hg2]
+    _ = g (f a₁) := by rfl
+    _ = g (f a₂) := by rw [hfa]
+    _ = (g ∘ f) a₂ := by rfl
+    _ = id a₂ := by rw [hg2]
+    _ = a₂ := by rfl
+  contradiction
 
-example (f : α → β) (g : β → α) (hg : RightInverse' f g) : ¬∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
-  sorry
+-- If f is injective, then there can only exist one right inverse
+example (f : α → β) (g : β → α) (hf_inj : Injective f) (hg : RightInverse' f g) : ¬∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
+  dsimp [RightInverse', Injective] at *
+  push_neg
+  intro h Hfh
+  ext b
+  apply hf_inj
+  calc
+    f (h b) = (f ∘ h) b := by rfl
+    _ = id b := by rw [Hfh]
+    _ = (f ∘ g) b := by rw [hg]
+    _ = f (g b) := by rfl
+
+-- It suffices to show that if g is not surjective, then f can have more than one right inverse
+example (f : α → β) (g : β → α) (hg : RightInverse' f g) (hg_nsurj : ¬Surjective g) : ∃ h : β → α, RightInverse' f h ∧ h ≠ g := by
+  dsimp [RightInverse', Surjective] at *
+  push_neg at *
+  obtain ⟨a, ha⟩ := hg_nsurj
+  let b := f a
+  use fun x => if x = b then a else g x
+  constructor
+  · ext x
+    simp
+    split_ifs with hxb
+    · rw [hxb]
+    · calc
+        f (g x) = (f ∘ g) x := by rfl
+        _ = id x := by rw [hg]
+        _ = x := by rfl
+  · simp
+    rw [funext_iff]
+    push_neg
+    use b
+    split_ifs with hb
+    · symm
+      apply ha
+    · contradiction
 
 -- 5.e
 example (f : α → β) (g h : β → α) (hg : LeftInverse f g) (hh : RightInverse' f h) : Bijective f ∧ g = h ∧ Inverse f h := by
