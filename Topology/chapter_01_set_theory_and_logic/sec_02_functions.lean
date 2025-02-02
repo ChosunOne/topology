@@ -718,9 +718,8 @@ example : ¬∃ g : ℕ → ℕ, LeftInverse f_no_left_inverse g := by
     _ = y := by rfl
 
 -- 5.d
--- The question is open ended, so it suffices to show one scenario in which there can be multiple distinct left inverses.  The answer here will demonstrate that, though it remains open whether or not the injectivity of g is a 
--- necessary condition.
--- We can definitely show that if f is not surjective but g is injective, there can be more than one left inverse
+-- The question is open ended, so it suffices to show one scenario in which there can be multiple distinct left/right inverses.  
+-- If f is not surjective but g is injective, there can be more than one left inverse
 example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hg2 : Injective g) (hf_nsurj : ¬ Surjective f) : ∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
   dsimp [LeftInverse, Surjective] at *
   push_neg at *
@@ -750,7 +749,7 @@ example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hg2 : Injective 
       contradiction
     · contradiction
 
--- We can definitely show that if f is surjective, there cannot be more than one left inverse
+-- If f is surjective, there cannot be more than one left inverse
 example (f : α → β) (g : β → α) (hg : LeftInverse f g) (hf_surj : Surjective f) : ¬∃ h : β → α, LeftInverse f h ∧ h ≠ g := by
   intro H
   obtain ⟨h, ⟨hfh, hhg⟩⟩ := H
@@ -824,7 +823,47 @@ example (f : α → β) (g : β → α) (hg : RightInverse' f g) (hg_nsurj : ¬S
 
 -- 5.e
 example (f : α → β) (g h : β → α) (hg : LeftInverse f g) (hh : RightInverse' f h) : Bijective f ∧ g = h ∧ Inverse f h := by
-  sorry
+  dsimp [LeftInverse, RightInverse'] at *
+  constructor
+  · constructor
+    · dsimp [Injective]
+      intro a₁ a₂ hfa
+      calc
+        a₁ = id a₁ := by rfl
+        _ = (g ∘ f) a₁ := by rw [hg]
+        _ = g (f a₁) := by rfl
+        _ = g (f a₂) := by rw [hfa]
+        _ = (g ∘ f) a₂ := by rfl
+        _ = id a₂ := by rw [hg]
+        _ = a₂ := by rfl
+    · dsimp [Surjective]
+      intro b
+      use h b
+      calc
+        f (h b) = (f ∘ h) b := by rfl
+        _ = id b := by rw [hh]
+        _ = b := by rfl
+  · constructor
+    · ext b
+      calc
+        g b = g (id b) := by rfl
+        _ = g ((f ∘ h) b) := by rw [hh]
+        _ = (g ∘ f) (h b) := by rfl
+        _ = id (h b) := by rw [hg]
+        _ = h b := by rfl
+    · dsimp [Inverse]
+      constructor
+      · ext a
+        calc
+          (h ∘ f) a = id ((h ∘ f) a) := by rfl
+          _ = (g ∘ f) ((h ∘ f) a) := by rw [hg]
+          _ = g (f (h (f a))) := by rfl
+          _ = g ((f ∘ h) (f a)) := by rfl
+          _ = g (id (f a)) := by rw [hh]
+          _ = g (f a) := by rfl
+          _ = (g ∘ f) a := by rfl
+          _ = id a := by rw [hg]
+      · apply hh
 
 -- 6.
 -- Fill out function `g` by restricting `f` appropriately
