@@ -869,9 +869,90 @@ example (f : α → β) (g h : β → α) (hg : LeftInverse f g) (hh : RightInve
 -- Fill out function `g` by restricting `f` appropriately
 def f (x : ℝ) := x ^ 3 - x
 
-def g (x : sorry) : sorry := sorry
+def nonnegative_reals_root_two := {x : ℝ | (√2:ℝ) ≤ x ∧ 0 ≤ x}
+local notation:1000 "ℝ₊√2" => nonnegative_reals_root_two
 
-example : Bijective g := by 
-  sorry
+
+def g := Set.restrict nonnegative_reals_root_two f
+theorem g_nonneg (x : ℝ₊√2) : g x ∈ ℝ₊√2 := by
+  obtain ⟨x, ⟨hx1, hx2⟩⟩ := x
+  dsimp [g, f, nonnegative_reals_root_two]
+  have h1 : 2 ≤ x ^ 2 := by calc
+    2 = √2 * √2 := by norm_num
+    _ ≤ √2 * x := by gcongr
+    _ ≤ x * x := by gcongr
+    _ = x ^ 2 := by ring
+  have : 0 ≤ √2 := by apply Real.sqrt_nonneg
+  have : √2 ≤ 2 := by 
+    refine Real.sqrt_le_iff.mpr ?_
+    constructor
+    norm_num
+    norm_num
+  have h2 : 2 * √2 ≤ x ^ 3 := by calc
+    2 * √2 ≤ x ^ 2 * √2 := by gcongr
+    _ ≤ x ^ 2 * x := by gcongr
+    _ = x ^ 3 := by ring
+  have h3 : 1 ≤ x ^ 2 - 1 := by linarith
+  constructor
+  · calc
+      √2 ≤ √2 * (2 - 1) := by norm_num
+      _ ≤ √2 * (x ^ 2 - 1) := by gcongr
+      _ ≤ x * (x ^ 2 - 1) := by gcongr
+      _ = x ^ 3 - x := by ring
+  · calc
+      0 ≤ √2 * (2 - 1) := by norm_num
+      _ ≤ √2 * (x ^ 2 - 1) := by gcongr
+      _ ≤ x * (x ^ 2 - 1) := by gcongr
+      _ = x ^ 3 - x := by ring
+
+def h (x : ℝ₊√2) : ℝ₊√2 := ⟨g x, g_nonneg x⟩ 
+noncomputable def h_inv (x : ℝ) : ℝ := - ((√3 * √(27 * x ^ 2 - 4) - 9 * x) ^ ((1:ℝ) / 3)) / ((2 ^ ((1:ℝ) / 3)) * 3 ^ ((2:ℝ) / 3)) - (((2:ℝ) / 3) ^ ((1:ℝ) / 3)) / ((√3 * √(27 * x ^ 2 - 4) - 9 * x) ^ ((1:ℝ) / 3))
+
+theorem h_nonneg (x : ℝ) (hx1 : √2 ≤ x) (hx2 : 0 ≤ x) : √2 ≤ h_inv x ∧ 0 ≤ h_inv x := by
+  -- this is easier to show with a graph and currently beyond my algebra to prove
+  · sorry
+
+
+example : Bijective h := by 
+  constructor
+  · dsimp [Injective]
+    intro x y hgx
+    obtain ⟨x, ⟨hx1, hx2⟩⟩ := x
+    obtain ⟨y, ⟨hy1, hy2⟩⟩ := y
+    dsimp [h, g, f] at hgx
+    simp at *
+    have hxy : (x - y) * (x ^ 2 + x * y + y ^ 2 - 1) = 0 := by linarith
+    rw [mul_eq_zero] at hxy
+    obtain hxy | hxy := hxy
+    · linarith
+    · have h1 : 2 ≤ x ^ 2 := by calc
+        2 = √2 * √2 := by norm_num
+        _ ≤ √2 * x := by gcongr
+        _ ≤ x * x := by gcongr
+        _ = x ^ 2 := by ring
+      have h2 : 2 ≤ y ^ 2 := by calc
+        2 = √2 * √2 := by norm_num
+        _ ≤ √2 * y := by gcongr
+        _ ≤ y * y:= by gcongr
+        _ = y ^ 2 := by ring
+      have h3 : 2 ≤ x * y := by calc
+        2 = √2 * √2 := by norm_num
+        _ ≤ x * √2 := by gcongr
+        _ ≤ x * y := by gcongr
+      have : 2 + 2 + 2 - 1 ≤ x ^ 2 + x * y + y ^ 2 - 1 := by gcongr
+      rw [hxy] at this
+      norm_num at this
+  · dsimp [Surjective]
+    intro b
+    dsimp [h, g, f]
+    obtain ⟨b, ⟨hb1, hb2⟩⟩ := b
+    simp
+    dsimp [nonnegative_reals_root_two] at *
+    use h_inv b
+    constructor
+    · exact h_nonneg b hb1 hb2
+    · sorry
+    -- this is easy to see in a graph, but horrendously complicated to prove, so I'm skipping the proof for now.
+
 
 end Exercises
